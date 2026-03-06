@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pet Valu Order</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: #0a0b0f; }
+body { font-family: 'Nunito', sans-serif; color: #f0f2f8; height: 100dvh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+
+.screen { display: none; flex-direction: column; height: 100dvh; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ── STORE SELECT ── */
+#s-store { justify-content: center; padding: 0 24px; }
+.store-eyebrow { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #f97316; margin-bottom: 12px; }
+.store-heading  { font-size: 32px; font-weight: 900; color: #f0f2f8; line-height: 1.1; margin-bottom: 48px; }
+.store-list { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+.store-btn { width: 100%; padding: 18px 20px; background: #16181f; border: 1px solid #2a2d3a; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-family: 'Nunito', sans-serif; }
+.store-btn:active { border-color: #f97316; background: #1e2029; }
+.store-btn-name { font-size: 17px; font-weight: 900; color: #f0f2f8; }
+.store-btn-arr  { font-size: 20px; color: #3a3d4a; }
+.hist-link { width: 100%; background: none; border: 1px solid #2a2d3a; border-radius: 12px; padding: 13px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: #5a5f7a; }
+.hist-link:active { background: #16181f; }
+
+/* ── TOPBAR ── */
+.topbar { padding: 14px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #16181f; flex-shrink: 0; }
+.back-btn { background: none; border: none; color: #5a5f7a; font-size: 24px; cursor: pointer; padding: 0; line-height: 1; font-family: inherit; }
+.topbar-center { flex: 1; }
+.topbar-name { font-size: 15px; font-weight: 900; color: #f0f2f8; }
+.topbar-date { font-size: 11px; font-weight: 700; color: #3a3d4a; }
+.items-badge { background: #16181f; border: 1px solid #2a2d3a; border-radius: 20px; padding: 5px 14px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 900; color: #5a5f7a; white-space: nowrap; border: none; }
+.items-badge.open { color: #f97316; }
+
+/* ── ITEMS LIST ── */
+#items-wrap { flex: 1; overflow-y: auto; padding: 10px 20px; border-bottom: 1px solid #16181f; display: none; }
+.item-row { display: flex; align-items: center; padding: 11px 0; border-bottom: 1px solid #16181f; gap: 12px; }
+.item-row:last-child { border-bottom: none; }
+.ir-num   { font-family: monospace; font-size: 15px; font-weight: 700; color: #f0f2f8; flex: 1; }
+.ir-order { font-size: 14px; font-weight: 800; color: #f97316; min-width: 40px; text-align: center; }
+.ir-qoh   { font-size: 14px; font-weight: 700; color: #60a5fa; min-width: 40px; text-align: center; }
+.ir-del   { background: none; border: none; color: #3a3d4a; cursor: pointer; font-size: 16px; padding: 0 4px; font-family: inherit; }
+.no-items { text-align: center; padding: 20px 0; color: #3a3d4a; font-size: 13px; font-weight: 700; }
+
+/* ── ENTRY DISPLAY ── */
+#entry-display { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 28px; }
+.step-dots { display: flex; gap: 8px; margin-bottom: 32px; justify-content: center; }
+.dot { height: 8px; border-radius: 99px; background: #1e2029; transition: all 0.2s; width: 8px; }
+.dot.active { background: #f97316; width: 24px; }
+.dot.done   { background: #f97316; }
+.e-label { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #f97316; margin-bottom: 12px; }
+.e-val   { font-size: 48px; font-weight: 900; color: #f0f2f8; line-height: 1; margin-bottom: 8px; min-height: 60px; display: flex; align-items: center; word-break: break-all; }
+.e-val.dim { color: #1e2029; }
+.cursor  { display: inline-block; width: 3px; height: 36px; background: #f97316; margin-left: 4px; vertical-align: middle; border-radius: 2px; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+.e-ctx   { display: flex; gap: 16px; }
+.e-ctx span { font-size: 12px; font-weight: 700; color: #3a3d4a; }
+.e-ctx .acc { color: #f97316; }
+.e-ctx .dim2 { color: #5a5f7a; }
+
+/* ── NUMPAD ── */
+.numpad { flex-shrink: 0; background: #0e0f14; border-top: 1px solid #16181f; padding: 10px 12px 16px; display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.k { background: #16181f; border: 1px solid #1e2029; border-radius: 12px; font-family: inherit; font-size: 22px; font-weight: 900; color: #f0f2f8; cursor: pointer; padding: 15px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1; user-select: none; }
+.k:active { background: #2a2d3a; }
+.k.util   { background: #0e0f14; color: #5a5f7a; font-size: 14px; border-color: #16181f; }
+.k.util:active { background: #1e2029; }
+.k.accent { background: #f97316; color: white; font-size: 14px; border-color: #f97316; }
+.k.accent:active { background: #c2580c; }
+.k.green  { background: #16a34a; color: white; font-size: 14px; border-color: #16a34a; }
+.k.green:active { background: #15803d; }
+.k-sub { font-size: 9px; font-weight: 800; letter-spacing: 0.5px; opacity: 0.6; }
+.k-review { grid-column: span 4; margin-top: 2px; width: 100%; padding: 16px; border-radius: 14px; border: none; font-family: inherit; font-size: 15px; font-weight: 900; cursor: pointer; background: #16181f; color: #3a3d4a; transition: background 0.2s; }
+.k-review.on { background: #f97316; color: white; }
+
+/* ── REVIEW / PAST ── */
+.scroll-area { flex: 1; overflow-y: auto; padding: 0 20px; }
+.rev-info { background: #16181f; border: 1px solid #2a2d3a; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin: 16px 0; flex-shrink: 0; }
+.ri-store { font-size: 16px; font-weight: 900; color: #f0f2f8; }
+.ri-meta  { font-size: 12px; font-weight: 700; color: #3a3d4a; margin-top: 2px; }
+.t-head   { display: grid; grid-template-columns: 1fr 64px 64px; padding: 8px 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #3a3d4a; border-bottom: 1px solid #16181f; margin-bottom: 4px; }
+.t-head div:nth-child(2), .t-head div:nth-child(3) { text-align: center; }
+.t-row    { display: grid; grid-template-columns: 1fr 64px 64px; padding: 12px 4px; border-bottom: 1px solid #16181f; align-items: center; }
+.t-row:last-child { border-bottom: none; }
+.t-item   { font-family: monospace; font-size: 15px; font-weight: 700; color: #f0f2f8; }
+.t-order  { text-align: center; font-size: 17px; font-weight: 900; color: #f97316; }
+.t-qoh    { text-align: center; font-size: 15px; font-weight: 700; color: #60a5fa; }
+.actions  { padding: 14px 20px 28px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+.btn-g    { padding: 17px; border-radius: 14px; border: none; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer; background: #16a34a; color: white; }
+.btn-g:active { background: #15803d; }
+.btn-s    { padding: 15px; border-radius: 14px; border: 1px solid #2a2d3a; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; background: #16181f; color: #5a5f7a; }
+.btn-s:active { background: #1e2029; }
+.btn-ghost { padding: 13px; border-radius: 14px; border: none; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; background: transparent; color: #3a3d4a; }
+
+/* ── HISTORY ── */
+.h-group { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #3a3d4a; margin: 14px 0 8px; }
+.h-card  { background: #16181f; border: 1px solid #2a2d3a; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.h-card:active { border-color: #f97316; }
+.hc-date { font-size: 14px; font-weight: 900; color: #f0f2f8; }
+.hc-meta { font-size: 12px; font-weight: 700; color: #3a3d4a; margin-top: 2px; }
+.hc-r    { display: flex; align-items: center; gap: 10px; }
+.hc-cnt  { font-size: 13px; font-weight: 900; color: #f97316; }
+.hc-arr  { font-size: 18px; color: #3a3d4a; }
+.hc-del  { background: none; border: none; color: #3a3d4a; cursor: pointer; font-size: 14px; padding: 4px 6px; font-family: inherit; }
+.hc-del:active { color: #f87171; }
+.empty   { text-align: center; padding: 48px 0; color: #3a3d4a; }
+.empty .ei { font-size: 36px; margin-bottom: 12px; }
+.empty p { font-size: 14px; font-weight: 700; }
+
+/* ── TOAST ── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: #1e2029; border: 1px solid #2a2d3a; color: #f0f2f8; padding: 12px 24px; border-radius: 99px; font-weight: 800; font-size: 14px; white-space: nowrap; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,0.6); opacity: 0; transition: all 0.2s; pointer-events: none; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ══ STORE SELECT ══ -->
+<div id="s-store" class="screen active">
+  <div class="store-eyebrow">Pet Valu</div>
+  <div class="store-heading">Which store<br>today?</div>
+  <div class="store-list">
+    <button class="store-btn" onclick="selectStore('Lakeshore Rd')"><span class="store-btn-name">Lakeshore Rd</span><span class="store-btn-arr">›</span></button>
+    <button class="store-btn" onclick="selectStore('Lambton Mall')"><span class="store-btn-name">Lambton Mall</span><span class="store-btn-arr">›</span></button>
+    <button class="store-btn" onclick="selectStore('Corunna')"><span class="store-btn-name">Corunna</span><span class="store-btn-arr">›</span></button>
+    <button class="store-btn" onclick="selectStore('London')"><span class="store-btn-name">London</span><span class="store-btn-arr">›</span></button>
+  </div>
+  <button class="hist-link" onclick="showHistory()">View Past Orders</button>
+</div>
+
+<!-- ══ ENTRY ══ -->
+<div id="s-entry" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-store')">‹</button>
+    <div class="topbar-center">
+      <div class="topbar-name" id="tStore"></div>
+      <div class="topbar-date" id="tDate"></div>
+    </div>
+    <button class="items-badge" id="itemsBadge" onclick="toggleItems()">0 items ▼</button>
+  </div>
+
+  <div id="items-wrap">
+    <div id="items-inner"></div>
+  </div>
+
+  <div id="entry-display">
+    <div class="step-dots">
+      <div class="dot active" id="d0"></div>
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+    </div>
+    <div class="e-label" id="eLabel">Item Number</div>
+    <div class="e-val dim" id="eVal">e.g. 75124<span class="cursor"></span></div>
+    <div class="e-ctx" id="eCtx"></div>
+  </div>
+
+  <div class="numpad">
+    <div></div>
+    <button class="k" onclick="kp('1')">1</button>
+    <button class="k" onclick="kp('2')">2</button>
+    <button class="k" onclick="kp('3')">3</button>
+    <button class="k util" onclick="kpBack()">◀<span class="k-sub">Back</span></button>
+    <button class="k" onclick="kp('4')">4</button>
+    <button class="k" onclick="kp('5')">5</button>
+    <button class="k" onclick="kp('6')">6</button>
+    <button class="k util" onclick="kpDel()">⌫</button>
+    <button class="k" onclick="kp('7')">7</button>
+    <button class="k" onclick="kp('8')">8</button>
+    <button class="k" onclick="kp('9')">9</button>
+    <button class="k accent" id="nextBtn" onclick="kpNext()">Next ›</button>
+    <div></div>
+    <button class="k" onclick="kp('0')">0</button>
+    <div></div>
+    <button class="k-review" id="reviewBtn" onclick="goToReview()">Review Order</button>
+  </div>
+</div>
+
+<!-- ══ REVIEW ══ -->
+<div id="s-review" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-entry')">‹</button>
+    <div style="flex:1;text-align:center;font-size:15px;font-weight:900">Review Order</div>
+    <div style="width:22px"></div>
+  </div>
+  <div style="padding:0 20px;flex-shrink:0">
+    <div class="rev-info">
+      <div><div class="ri-store" id="rStore"></div><div class="ri-meta" id="rMeta"></div></div>
+      <div style="font-size:24px">📍</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="t-head"><div>Item #</div><div>Order</div><div>On Hand</div></div>
+    <div id="rList"></div>
+  </div>
+  <div class="actions">
+    <button class="btn-g" onclick="finalise()">Save &amp; Copy for Computer</button>
+    <button class="btn-s" onclick="dlCSV()">Save as Spreadsheet</button>
+    <button class="btn-ghost" onclick="goTo('s-entry')">← Keep Adding Items</button>
+  </div>
+</div>
+
+<!-- ══ HISTORY ══ -->
+<div id="s-history" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-store')">‹</button>
+    <div style="flex:1;text-align:center;font-size:15px;font-weight:900">Past Orders</div>
+    <div style="width:22px"></div>
+  </div>
+  <div class="scroll-area" style="padding-top:8px" id="hScroll"></div>
+</div>
+
+<!-- ══ PAST ORDER ══ -->
+<div id="s-past" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-history')">‹</button>
+    <div style="flex:1;text-align:center;font-size:15px;font-weight:900" id="pTitle"></div>
+    <div style="width:22px"></div>
+  </div>
+  <div style="padding:12px 20px 0;flex-shrink:0;font-size:12px;font-weight:700;color:#3a3d4a" id="pMeta"></div>
+  <div class="scroll-area" style="padding-top:8px">
+    <div class="t-head"><div>Item #</div><div>Order</div><div>On Hand</div></div>
+    <div id="pList"></div>
+  </div>
+  <div class="actions">
+    <button class="btn-g" onclick="copyPast()">Copy for Computer</button>
+    <button class="btn-s" onclick="dlPastCSV()">Save as Spreadsheet</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const FIELDS  = ['item','order','qoh'];
+const LABELS  = { item:'Item Number', order:'Order Qty', qoh:'On Hand' };
+const PROMPTS = { item:'e.g. 75124', order:'0', qoh:'0' };
+const HK = 'pv_order_history', DP = 'pv_draft_';
+
+let store='', items=[], curField='item', curValue='', curRow={item:'',order:'',qoh:''}, showItems=false, pastOrder=null;
+
+const loadHist  = () => { try{return JSON.parse(localStorage.getItem(HK)||'[]')}catch{return[]} };
+const saveHist  = h  => { try{localStorage.setItem(HK,JSON.stringify(h))}catch{} };
+const loadDraft = s  => { try{return JSON.parse(localStorage.getItem(DP+s)||'[]')}catch{return[]} };
+const saveDraft = () => { try{localStorage.setItem(DP+store,JSON.stringify(items))}catch{} };
+const clearDraft= () => { try{localStorage.removeItem(DP+store)}catch{} };
+
+function archiveOrder() {
+  const h=loadHist();
+  h.unshift({id:Date.now(),store,date:new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}),isoDate:new Date().toLocaleDateString('en-CA'),items:items.filter(i=>i.order>0)});
+  saveHist(h.slice(0,50));
+}
+
+function goTo(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function selectStore(name) {
+  store=name; items=loadDraft(name);
+  curField='item'; curValue=''; curRow={item:'',order:'',qoh:''}; showItems=false;
+  document.getElementById('tStore').textContent=name;
+  document.getElementById('tDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  renderItems(); refreshDisp(); refreshNext(); refreshReview();
+  goTo('s-entry');
+}
+
+function toggleItems() {
+  showItems=!showItems;
+  document.getElementById('items-wrap').style.display=showItems?'block':'none';
+  document.getElementById('entry-display').style.display=showItems?'none':'flex';
+  const b=document.getElementById('itemsBadge');
+  b.textContent=items.length+' items '+(showItems?'▲':'▼');
+  b.className='items-badge'+(showItems?' open':'');
+}
+
+function showHistory() { renderHist(); goTo('s-history'); }
+
+function goToReview() {
+  const ord=items.filter(i=>i.order>0);
+  if(!ord.length){showToast('No items with an order quantity yet');return;}
+  document.getElementById('rStore').textContent=store;
+  document.getElementById('rMeta').textContent=ord.length+' items · '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  document.getElementById('rList').innerHTML=ord.map(i=>`<div class="t-row"><div class="t-item">${i.itemNum}</div><div class="t-order">${i.order}</div><div class="t-qoh">${i.qoh}</div></div>`).join('');
+  goTo('s-review');
+}
+
+function kp(d){curValue+=d;refreshDisp();}
+function kpDel(){curValue=curValue.slice(0,-1);refreshDisp();}
+function kpBack(){
+  curRow[curField]=curValue;
+  const idx=FIELDS.indexOf(curField); if(idx===0)return;
+  curField=FIELDS[idx-1]; curValue=curRow[curField]||'';
+  refreshDisp(); refreshNext();
+}
+function kpNext(){
+  if(!curValue&&curField==='item'){showToast('Enter an item number first');return;}
+  curRow[curField]=curValue;
+  const idx=FIELDS.indexOf(curField);
+  if(idx<FIELDS.length-1){curField=FIELDS[idx+1];curValue=curRow[curField]||'';refreshDisp();refreshNext();}
+  else commitRow();
+}
+function commitRow(){
+  if(!curRow.item){showToast('Item number is empty');return;}
+  items.push({id:Date.now()+Math.random(),itemNum:curRow.item,order:parseInt(curRow.order)||0,qoh:parseInt(curRow.qoh)||0});
+  saveDraft(); curRow={item:'',order:'',qoh:''}; curField='item'; curValue='';
+  renderItems(); refreshDisp(); refreshNext(); refreshReview();
+  showToast('✓ Saved');
+}
+function deleteItem(id){items=items.filter(i=>i.id!==id);saveDraft();renderItems();refreshReview();}
+
+function renderItems(){
+  const b=document.getElementById('itemsBadge');
+  b.textContent=items.length+' items '+(showItems?'▲':'▼');
+  const inner=document.getElementById('items-inner');
+  inner.innerHTML=!items.length?'<div class="no-items">No items yet</div>':items.map(it=>`<div class="item-row"><span class="ir-num">${it.itemNum}</span><span class="ir-order">${it.order}</span><span class="ir-qoh">${it.qoh}</span><button class="ir-del" onclick="deleteItem(${it.id})">✕</button></div>`).join('');
+}
+
+function refreshDisp(){
+  const fi=FIELDS.indexOf(curField);
+  [0,1,2].forEach(i=>{const d=document.getElementById('d'+i);d.className='dot'+(i<fi?' done':i===fi?' active':'');});
+  document.getElementById('eLabel').textContent=LABELS[curField];
+  const v=document.getElementById('eVal');
+  if(curValue){v.className='e-val';v.innerHTML=curValue+'<span class="cursor"></span>';}
+  else{v.className='e-val dim';v.innerHTML=PROMPTS[curField]+'<span class="cursor"></span>';}
+  const ctx=document.getElementById('eCtx');
+  if(curField==='item'){ctx.innerHTML='';return;}
+  let h='';
+  if(curRow.item) h+=`<span>Item: <span class="dim2">${curRow.item}</span></span>`;
+  if(curField==='qoh'&&curRow.order) h+=`<span>Order: <span class="acc">${curRow.order}</span></span>`;
+  ctx.innerHTML=h;
+}
+
+function refreshNext(){
+  const btn=document.getElementById('nextBtn'),last=curField==='qoh';
+  btn.textContent=last?'Add ✓':'Next ›'; btn.className='k '+(last?'green':'accent');
+}
+
+function refreshReview(){
+  const btn=document.getElementById('reviewBtn'),cnt=items.filter(i=>i.order>0).length,has=cnt>0;
+  btn.className='k-review'+(has?' on':'');
+  btn.textContent=has?`Review Order (${cnt} items) →`:'Review Order';
+}
+
+function renderHist(){
+  const hist=loadHist(),sc=document.getElementById('hScroll');
+  if(!hist.length){sc.innerHTML='<div class="empty"><div class="ei">🕓</div><p>No past orders yet</p></div>';return;}
+  const g={};hist.forEach(o=>{if(!g[o.store])g[o.store]=[];g[o.store].push(o);});
+  sc.innerHTML=Object.keys(g).map(s=>`<div class="h-group">${s}</div>`+g[s].map(o=>`<div class="h-card" onclick="viewPast(${o.id})"><div><div class="hc-date">${o.date}</div><div class="hc-meta">${o.items.length} items ordered</div></div><div class="hc-r"><span class="hc-cnt">${o.items.length}</span><span class="hc-arr">›</span><button class="hc-del" onclick="event.stopPropagation();delHist(${o.id})">✕</button></div></div>`).join('')).join('');
+}
+
+function delHist(id){if(!confirm('Delete this order?'))return;saveHist(loadHist().filter(o=>o.id!==id));renderHist();}
+
+function viewPast(id){
+  pastOrder=loadHist().find(o=>o.id===id); if(!pastOrder)return;
+  document.getElementById('pTitle').textContent=pastOrder.store;
+  document.getElementById('pMeta').textContent=pastOrder.date+' · '+pastOrder.items.length+' items';
+  document.getElementById('pList').innerHTML=pastOrder.items.map(i=>`<div class="t-row"><div class="t-item">${i.itemNum}</div><div class="t-order">${i.order}</div><div class="t-qoh">${i.qoh}</div></div>`).join('');
+  goTo('s-past');
+}
+
+function copyPast(){
+  if(!pastOrder)return;
+  copyTxt(JSON.stringify({store:pastOrder.store,date:pastOrder.isoDate,items:pastOrder.items.map(i=>({item:i.itemNum,order:i.order,qoh:i.qoh}))},null,2),'Copied!');
+}
+function dlPastCSV(){
+  if(!pastOrder)return;
+  let csv='Store,Date,Item #,Order Qty,On Hand\n';
+  pastOrder.items.forEach(i=>{csv+=`"${pastOrder.store}","${pastOrder.isoDate}","${i.itemNum}",${i.order},${i.qoh}\n`;});
+  doDownload(csv,`${pastOrder.store.replace(/ /g,'_')}_order_${pastOrder.isoDate}.csv`);
+}
+
+function finalise(){
+  archiveOrder(); clearDraft();
+  const p={store,date:new Date().toLocaleDateString('en-CA'),items:items.filter(i=>i.order>0).map(i=>({item:i.itemNum,order:i.order,qoh:i.qoh}))};
+  copyTxt(JSON.stringify(p,null,2),'✓ Copied! Paste into the bot.');
+  items=[]; goTo('s-store');
+}
+
+function dlCSV(){
+  const date=new Date().toLocaleDateString('en-CA');
+  let csv='Store,Date,Item #,Order Qty,On Hand\n';
+  items.filter(i=>i.order>0).forEach(i=>{csv+=`"${store}","${date}","${i.itemNum}",${i.order},${i.qoh}\n`;});
+  doDownload(csv,`${store.replace(/ /g,'_')}_order_${date}.csv`);
+  showToast('Spreadsheet saved!');
+}
+
+function copyTxt(text,msg){
+  (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject())
+    .then(()=>showToast(msg))
+    .catch(()=>{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast(msg);});
+}
+function doDownload(csv,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;a.click();}
+
+let _tt;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2000);}
+
+refreshDisp(); refreshNext(); refreshReview();
+</script>
+</body>
+</html>

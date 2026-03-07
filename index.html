@@ -242,7 +242,7 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 
 <!-- ══ STORE SELECT ══ -->
 <div id="s-operator" class="screen active" style="justify-content:center;padding:0 28px">
-  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.0</span></div>
+  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.1</span></div>
   <div class="store-heading">Who is doing<br>the order?</div>
   <div class="store-list">
     <button class="store-btn" onclick="selectOperator('Nipun')"><span class="store-btn-name">Nipun</span><span class="store-btn-arr">›</span></button>
@@ -251,13 +251,14 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 </div>
 
 <div id="s-store" class="screen">
-  <div class="store-heading">Which store<br>today?</div>
-  <div class="store-list">
-    <button class="store-btn" onclick="selectStore('Lakeshore Rd')"><span class="store-btn-name">Lakeshore Rd</span><span class="store-btn-arr">›</span></button>
-    <button class="store-btn" onclick="selectStore('Lambton Mall')"><span class="store-btn-name">Lambton Mall</span><span class="store-btn-arr">›</span></button>
-    <button class="store-btn" onclick="selectStore('Corunna')"><span class="store-btn-name">Corunna</span><span class="store-btn-arr">›</span></button>
-    <button class="store-btn" onclick="selectStore('London')"><span class="store-btn-name">London</span><span class="store-btn-arr">›</span></button>
+  <div style="width:100%;margin-bottom:20px">
+    <button class="back-btn" onclick="goTo('s-operator')">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
   </div>
+  <div class="store-heading">Which store<br>today?</div>
+  <div class="store-list" id="storeList"></div>
   <button class="hist-link" onclick="goTo('s-history'); renderHist()">Past Orders</button>
 </div>
 
@@ -477,6 +478,19 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 
 <div id="toast"></div>
 
+<!-- Duplicate item modal -->
+<div id="dupModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(6,9,16,0.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:28px">
+  <div style="background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Already added</div>
+    <div id="dupMsg" style="font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.5"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="dupJump()" style="width:100%;padding:14px;background:var(--accent);color:#060910;border:none;border-radius:12px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Jump to item</button>
+      <button onclick="dupDismiss()" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:12px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer">Got it</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const FIELDS  = ['item','order','qoh'];
 const LABELS  = { item:'Item Number', order:'Order Qty', qoh:'On Hand' };
@@ -511,8 +525,22 @@ function goTo(id) {
 }
 
 // ── OPERATOR SELECT ──
+function renderStoreBtns() {
+  const stores = ['Lakeshore Rd', 'Lambton Mall', 'Corunna', 'London'];
+  const list = document.getElementById('storeList');
+  if (!list) return;
+  list.innerHTML = stores.map(s => {
+    const draft = loadDraft(s);
+    const badge = draft.length > 0
+      ? `<span style="font-size:10px;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace;background:rgba(0,200,150,0.12);border:1px solid var(--accent);border-radius:20px;padding:2px 8px;margin-right:4px">${draft.length} items</span>`
+      : '';
+    return `<button class="store-btn" onclick="selectStore('${s}')"><span class="store-btn-name">${s}</span><div style="display:flex;align-items:center;gap:6px">${badge}<span class="store-btn-arr">›</span></div></button>`;
+  }).join('');
+}
+
 function selectOperator(name) {
   operator = name;
+  renderStoreBtns();
   goTo('s-store');
 }
 
@@ -540,9 +568,37 @@ function kpBack() {
   curField = FIELDS[idx-1]; curValue = curRow[curField] || '';
   refreshDisp(); refreshNext();
 }
+let _dupIdx = -1;
+function dupDismiss() {
+  document.getElementById('dupModal').style.display = 'none';
+}
+function dupJump() {
+  document.getElementById('dupModal').style.display = 'none';
+  if (_dupIdx < 0) return;
+  // Scroll to row
+  const area = document.getElementById('itemsArea');
+  const rows = document.querySelectorAll('#items-inner .item-row');
+  if (rows[_dupIdx]) {
+    rows[_dupIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    rows[_dupIdx].style.transition = 'background 0.2s';
+    rows[_dupIdx].style.background = 'rgba(0,200,150,0.18)';
+    setTimeout(() => { rows[_dupIdx].style.background = ''; }, 3500);
+  }
+}
+function showDupModal(itemNum, idx) {
+  _dupIdx = idx;
+  document.getElementById('dupMsg').textContent = `Item ${itemNum} is already in your list at row ${idx + 1}.`;
+  const m = document.getElementById('dupModal');
+  m.style.display = 'flex';
+}
 function kpNext() {
   if (editIdx >= 0) { saveInlineEdit(); return; }
   if (!curValue && curField === 'item') { showToast('Enter an item number first'); return; }
+  // Duplicate check when leaving item field
+  if (curField === 'item') {
+    const dupIdx = items.findIndex(i => i.itemNum.toLowerCase() === curValue.toLowerCase());
+    if (dupIdx >= 0) { showDupModal(curValue, dupIdx); return; }
+  }
   curRow[curField] = curValue;
   // Save cases flag when leaving order field
   if (curField === 'order') curRow.cases = casesMode;
@@ -554,6 +610,7 @@ function commitRow() {
   if (!curRow.item) { showToast('Item number is empty'); return; }
   items.push({ id:nextId++, itemNum:curRow.item, order:parseInt(curRow.order)||0, qoh:parseInt(curRow.qoh)||0, cases:!!curRow.cases });
   casesMode = false; curRow.cases = false; setCasesMode(false);
+  if (navigator.vibrate) navigator.vibrate(40);
   saveDraft(); curRow={item:'',order:'',qoh:''}; curField='item'; curValue='';
   renderEntryItems(); refreshDisp(); refreshNext(); refreshReview();
   showToast('Saved');
@@ -869,7 +926,7 @@ function finalise() {
   archiveOrder(); clearDraft();
   const p={store,date:new Date().toLocaleDateString('en-CA'),items:items.filter(i=>i.itemNum).map(i=>({item:i.itemNum,order:i.cases?-i.order:i.order,qoh:i.qoh}))};
   copyTxt(JSON.stringify(p,null,2),'Order saved and copied');
-  items=[]; nextId=1; goTo('s-store');
+  items=[]; nextId=1; renderStoreBtns(); goTo('s-store');
 }
 function dlCSV() {
   const date=new Date().toLocaleDateString('en-CA');

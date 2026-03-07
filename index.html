@@ -429,6 +429,10 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
       </div>
       <button class="neh-cancel" onclick="closeOverlay()">Cancel</button>
     </div>
+    <div class="cases-toggle-row" id="overlayCasesRow" style="padding: 0 14px 8px;">
+      <button class="cases-btn active" id="overlayCasesBtnQty"   onclick="setOverlayCasesMode(false)">QTY</button>
+      <button class="cases-btn"        id="overlayCasesBtnCases" onclick="setOverlayCasesMode(true)">CASES</button>
+    </div>
     <div class="overlay-numpad">
       <div></div>
       <button class="k" onclick="okp('1')">1</button>
@@ -542,19 +546,27 @@ function startEdit(idx, field) {
   editIdx = idx; editField = field;
   const item = items[idx]; if (!item) return;
   curValue = field==='item' ? item.itemNum : field==='order' ? String(item.order) : String(item.qoh);
+  // Load current cases state into toggle
+  if (field === 'order') {
+    casesMode = !!item.cases;
+    setCasesMode(casesMode);
+    const casesRow = document.getElementById('casesToggleRow');
+    if (casesRow) casesRow.classList.add('show');
+  }
   refreshEditDisp(); renderEntryItems();
 }
 function saveInlineEdit() {
   if (editIdx < 0) return;
   const item = items[editIdx]; if (!item) { cancelEdit(); return; }
   if (editField==='item')  item.itemNum = curValue || item.itemNum;
-  if (editField==='order') item.order   = parseInt(curValue)||0;
+  if (editField==='order') { item.order = parseInt(curValue)||0; item.cases = casesMode; }
   if (editField==='qoh')   item.qoh     = parseInt(curValue)||0;
   saveDraft(); cancelEdit(); renderEntryItems(); refreshReview();
   showToast('Updated');
 }
 function cancelEdit() {
   editIdx=-1; editField=null; curValue='';
+  casesMode = false; setCasesMode(false);
   renderEntryItems(); refreshDisp(); refreshNext();
 }
 function refreshEditDisp() {
@@ -671,6 +683,12 @@ function openOverlay(idx, field) {
   lbl.textContent = LABELS[field];
   lbl.style.color = field==='qoh' ? 'var(--blue)' : 'var(--accent)';
   saveBtn.className = 'k ' + (field==='qoh' ? 'kblue' : 'kaccent');
+  // Show/hide cases toggle and load current state
+  const casesRow = document.getElementById('overlayCasesRow');
+  if (casesRow) {
+    casesRow.classList.toggle('show', field === 'order');
+    if (field === 'order') setOverlayCasesMode(!!item.cases);
+  }
   // Highlight tapped cell
   document.querySelectorAll('.rev-cell').forEach(c => c.classList.remove('editing','editing-blue'));
   renderReviewList(); // re-render then highlight
@@ -703,7 +721,7 @@ function saveOverlayEdit() {
   if (overlayIdx < 0) return;
   const item = items[overlayIdx]; if (!item) { closeOverlay(); return; }
   if (overlayField==='item')  item.itemNum = overlayValue || item.itemNum;
-  if (overlayField==='order') item.order   = parseInt(overlayValue)||0;
+  if (overlayField==='order') { item.order = parseInt(overlayValue)||0; item.cases = overlayCasesMode; }
   if (overlayField==='qoh')   item.qoh     = parseInt(overlayValue)||0;
   saveDraft();
   closeOverlay();
@@ -782,11 +800,18 @@ function showToast(msg) { const t=document.getElementById('toast');t.textContent
 
 // ── CASES MODE ──
 let casesMode = false;
+let overlayCasesMode = false;
 
 function setCasesMode(val) {
   casesMode = val;
   document.getElementById('casesBtnQty').classList.toggle('active', !val);
   document.getElementById('casesBtnCases').classList.toggle('active', val);
+}
+
+function setOverlayCasesMode(val) {
+  overlayCasesMode = val;
+  document.getElementById('overlayCasesBtnQty').classList.toggle('active', !val);
+  document.getElementById('overlayCasesBtnCases').classList.toggle('active', val);
 }
 
 // ── INIT ──

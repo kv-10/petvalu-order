@@ -242,7 +242,7 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 
 <!-- ══ STORE SELECT ══ -->
 <div id="s-store" class="screen active">
-  <div class="brand-line">Pet Valu</div>
+  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v1.4</span></div>
   <div class="store-heading">Which store<br>today?</div>
   <div class="store-list">
     <button class="store-btn" onclick="selectStore('Lakeshore Rd')"><span class="store-btn-name">Lakeshore Rd</span><span class="store-btn-arr">›</span></button>
@@ -750,18 +750,22 @@ function viewPast(id) {
   document.getElementById('pTitle').textContent=pastOrder.store;
   document.getElementById('pStore').textContent=pastOrder.store;
   document.getElementById('pMeta').textContent=pastOrder.date+' · '+pastOrder.items.length+' items';
-  document.getElementById('pList').innerHTML=pastOrder.items.map(i=>`
-    <div class="t-row"><div class="t-item">${i.itemNum}</div><div class="t-order">${i.order}</div><div class="t-qoh">${i.qoh}</div></div>`).join('');
+  document.getElementById('pList').innerHTML=pastOrder.items.map(i=>{
+    const isCases = i.order < 0 || i.cases;
+    const absOrder = Math.abs(i.order);
+    const orderDisplay = isCases ? absOrder + '<span style="color:var(--accent);font-size:10px;font-weight:700;display:block;line-height:1.2">' + (absOrder===1?'case':'cases') + '</span>' : absOrder;
+    return `<div class="t-row"><div class="t-item">${i.itemNum}</div><div class="t-order">${orderDisplay}</div><div class="t-qoh">${i.qoh}</div></div>`;
+  }).join('');
   goTo('s-past');
 }
 function copyPast() {
   if(!pastOrder)return;
-  copyTxt(JSON.stringify({store:pastOrder.store,date:pastOrder.isoDate,items:pastOrder.items.map(i=>({item:i.itemNum,order:i.order,qoh:i.qoh}))},null,2),'Copied to clipboard');
+  copyTxt(JSON.stringify({store:pastOrder.store,date:pastOrder.isoDate,items:pastOrder.items.map(i=>({item:i.itemNum,order:(i.cases&&i.order>0)?-i.order:i.order,qoh:i.qoh}))},null,2),'Copied to clipboard');
 }
 function dlPastCSV() {
   if(!pastOrder)return;
-  let csv='Store,Date,Item #,Order Qty,On Hand\n';
-  pastOrder.items.forEach(i=>{csv+=`"${pastOrder.store}","${pastOrder.isoDate}","${i.itemNum}",${i.order},${i.qoh}\n`;});
+  let csv='Store,Date,Item #,Order Qty,Cases,On Hand\n';
+  pastOrder.items.forEach(i=>{const absOrd=Math.abs(i.order);const caseLbl=(i.cases||i.order<0)?(absOrd===1?'case':'cases'):'';csv+=`"${pastOrder.store}","${pastOrder.isoDate}","${i.itemNum}",${absOrd},"${caseLbl}",${i.qoh}\n`;});
   doDownload(csv,`${pastOrder.store.replace(/ /g,'_')}_${pastOrder.isoDate}.csv`);
 }
 
@@ -782,8 +786,8 @@ function finalise() {
 }
 function dlCSV() {
   const date=new Date().toLocaleDateString('en-CA');
-  let csv='Store,Date,Item #,Order Qty,On Hand\n';
-  items.filter(i=>i.order>0).forEach(i=>{csv+=`"${store}","${date}","${i.itemNum}",${i.order},${i.qoh}\n`;});
+  let csv='Store,Date,Item #,Order Qty,Cases,On Hand\n';
+  items.filter(i=>i.order>0).forEach(i=>{const absOrd=Math.abs(i.order);const caseLbl=i.cases?(absOrd===1?'case':'cases'):'';csv+=`"${store}","${date}","${i.itemNum}",${absOrd},"${caseLbl}",${i.qoh}\n`;});
   doDownload(csv,`${store.replace(/ /g,'_')}_${date}.csv`);
   showToast('Spreadsheet saved');
 }

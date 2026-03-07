@@ -242,7 +242,7 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 
 <!-- ══ STORE SELECT ══ -->
 <div id="s-store" class="screen active">
-  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v1.4</span></div>
+  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v1.5</span></div>
   <div class="store-heading">Which store<br>today?</div>
   <div class="store-list">
     <button class="store-btn" onclick="selectStore('Lakeshore Rd')"><span class="store-btn-name">Lakeshore Rd</span><span class="store-btn-arr">›</span></button>
@@ -481,7 +481,7 @@ const saveDraft = () => { try{localStorage.setItem(DP+store,JSON.stringify(items
 const clearDraft= () => { try{localStorage.removeItem(DP+store)}catch{} };
 function archiveOrder() {
   const h = loadHist();
-  h.unshift({ id:Date.now(), store, date:new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}), isoDate:new Date().toLocaleDateString('en-CA'), items:items.filter(i=>i.order>0) });
+  h.unshift({ id:Date.now(), store, date:new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}), isoDate:new Date().toLocaleDateString('en-CA'), items:items.filter(i=>i.itemNum) });
   saveHist(h.slice(0,50));
 }
 
@@ -613,7 +613,7 @@ function refreshNext() {
   btn.className   = 'k ' + (last ? 'kblue' : 'kaccent');
 }
 function refreshReview() {
-  const cnt = items.filter(i=>i.order>0).length, has = cnt>0;
+  const cnt = items.filter(i=>i.itemNum).length, has = cnt>0;
   const btn = document.getElementById('reviewBtn');
   btn.className   = 'k-review' + (has ? ' on' : '');
   btn.textContent = has ? 'Review Order  (' + cnt + ')' : 'Review Order';
@@ -640,7 +640,7 @@ function renderEntryItems() {
 
 // ── REVIEW SCREEN ──
 function goToReview() {
-  const ord = items.filter(i=>i.order>0);
+  const ord = items.filter(i=>i.itemNum);
   if (!ord.length) { showToast('No items with an order quantity yet'); return; }
   renderReviewList();
   document.getElementById('rStore').textContent = store;
@@ -649,7 +649,7 @@ function goToReview() {
   goTo('s-review');
 }
 function renderReviewList() {
-  const ord = items.filter(i=>i.order>0);
+  const ord = items.filter(i=>i.itemNum);
   document.getElementById('rList').innerHTML = ord.map((it, ri) => {
     // ri = index within ordered items; need to map back to items[] index
     const idx = items.indexOf(it);
@@ -669,7 +669,7 @@ function deleteReviewItem(idx) {
   items.splice(idx, 1);
   saveDraft(); renderReviewList(); renderEntryItems(); refreshReview();
   // If no items left, go back
-  if (!items.filter(i=>i.order>0).length) goTo('s-entry');
+  if (!items.filter(i=>i.itemNum).length) goTo('s-entry');
 }
 
 // ── OVERLAY NUMPAD (review screen) ──
@@ -771,7 +771,7 @@ function dlPastCSV() {
 
 // ── EMAIL ──
 function sendEmail() {
-  const ord     = items.filter(i => i.order > 0);
+  const ord     = items.filter(i => i.itemNum);
   const subject = encodeURIComponent(`Pet Valu Order — ${store} — ${new Date().toLocaleDateString('en-CA')}`);
   const body    = JSON.stringify({store, date: new Date().toLocaleDateString('en-CA'), items: ord.map(i => ({item: i.itemNum, order: i.cases ? -i.order : i.order, qoh: i.qoh}))}, null, 2);
   window.location.href = `mailto:sarniapetvalu@gmail.com?subject=${subject}&body=${encodeURIComponent(body)}`;
@@ -780,14 +780,14 @@ function sendEmail() {
 // ── FINALISE ──
 function finalise() {
   archiveOrder(); clearDraft();
-  const p={store,date:new Date().toLocaleDateString('en-CA'),items:items.filter(i=>i.order>0).map(i=>({item:i.itemNum,order:i.cases?-i.order:i.order,qoh:i.qoh}))};
+  const p={store,date:new Date().toLocaleDateString('en-CA'),items:items.filter(i=>i.itemNum).map(i=>({item:i.itemNum,order:i.cases?-i.order:i.order,qoh:i.qoh}))};
   copyTxt(JSON.stringify(p,null,2),'Order saved and copied');
   items=[]; nextId=1; goTo('s-store');
 }
 function dlCSV() {
   const date=new Date().toLocaleDateString('en-CA');
   let csv='Store,Date,Item #,Order Qty,Cases,On Hand\n';
-  items.filter(i=>i.order>0).forEach(i=>{const absOrd=Math.abs(i.order);const caseLbl=i.cases?(absOrd===1?'case':'cases'):'';csv+=`"${store}","${date}","${i.itemNum}",${absOrd},"${caseLbl}",${i.qoh}\n`;});
+  items.filter(i=>i.itemNum).forEach(i=>{const absOrd=Math.abs(i.order);const caseLbl=i.cases?(absOrd===1?'case':'cases'):'';csv+=`"${store}","${date}","${i.itemNum}",${absOrd},"${caseLbl}",${i.qoh}\n`;});
   doDownload(csv,`${store.replace(/ /g,'_')}_${date}.csv`);
   showToast('Spreadsheet saved');
 }

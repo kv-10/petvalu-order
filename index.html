@@ -383,13 +383,12 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
     <div id="rList"></div>
   </div>
 
-  <div class="rev-actions">
-    <button class="btn-primary" onclick="finalise()">Save &amp; Copy for Computer</button>
-    <button class="btn-secondary" onclick="sendEmail()">Send via Email</button>
-    <button class="btn-secondary" id="driveBtn" onclick="saveToDrive()">Save to Drive</button>
-    <button class="btn-secondary" onclick="dlJSON()">Download JSON</button>
-    <button class="btn-secondary" onclick="dlCSV()">Save as Spreadsheet</button>
-    <button class="btn-ghost" onclick="goTo('s-entry')">Continue Adding Items</button>
+  <div style="padding:10px 18px 12px;flex-shrink:0;display:flex;gap:8px">
+    <button class="btn-ghost" style="flex:1" onclick="goTo('s-entry')">Continue Adding Items</button>
+    <button onclick="openExport('review')" style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:var(--accent);color:#060910;border:none;border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      Export
+    </button>
   </div>
 </div>
 
@@ -431,12 +430,55 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
     <div class="t-head"><div>Item #</div><div>Order</div><div>On Hand</div></div>
     <div id="pList"></div>
   </div>
-  <div class="past-actions">
-    <button class="btn-primary" onclick="copyPast()">Copy for Computer</button>
-    <button class="btn-secondary" onclick="sendPastEmail()">Send via Email</button>
-    <button class="btn-secondary" onclick="dlPastJSON()">Download JSON</button>
-    <button class="btn-secondary" onclick="dlPastCSV()">Save as Spreadsheet</button>
+  <div style="padding:10px 18px 12px;flex-shrink:0">
+    <button onclick="openExport('past')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--accent);color:#060910;border:none;border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:700;cursor:pointer">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      Export
+    </button>
   </div>
+</div>
+
+<!-- ══ EXPORT SHEET ══ -->
+<div id="exportOverlay" onclick="closeExport()" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(6,9,16,0.7);backdrop-filter:blur(3px)"></div>
+<div id="exportSheet" style="position:fixed;bottom:-400px;left:0;right:0;z-index:201;background:var(--s1);border-radius:24px 24px 0 0;border-top:1px solid var(--border);padding:0 18px 36px;transition:bottom 0.3s cubic-bezier(0.32,0.72,0,1)">
+  <div style="width:40px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 20px"></div>
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:14px">Export</div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <button id="exportDriveBtn" onclick="exportAction('drive')" style="width:100%;padding:15px;background:var(--accent);color:#060910;border:none;border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Upload to Google Drive
+    </button>
+    <button onclick="exportAction('email')" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:left">Send via Email</button>
+    <button onclick="exportAction('clipboard')" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:left">Save to Clipboard</button>
+    <button onclick="exportAction('json')" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:left">Save as .JSON</button>
+    <button onclick="exportAction('csv')" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:left">Save as .CSV (Excel)</button>
+  </div>
+</div>
+
+<!-- ══ DRIVE UPLOAD OVERLAY ══ -->
+<div id="driveLoadingOverlay" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(6,9,16,0.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;flex-direction:column;gap:20px">
+  <div style="position:relative;width:90px;height:90px">
+    <svg id="driveSpinnerSvg" viewBox="0 0 90 90" style="position:absolute;inset:0;width:90px;height:90px">
+      <circle cx="45" cy="45" r="38" fill="none" stroke="var(--border)" stroke-width="5"/>
+      <circle id="driveArc" cx="45" cy="45" r="38" fill="none" stroke="var(--accent)" stroke-width="5"
+        stroke-linecap="round" stroke-dasharray="239" stroke-dashoffset="239"
+        transform="rotate(-90 45 45)"
+        style="transition:stroke-dashoffset 0.6s ease, stroke 0.4s ease"/>
+    </svg>
+    <div id="driveIconCenter" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+      <svg id="driveUpIcon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7">
+        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+      </svg>
+      <svg id="driveCheckIcon" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <svg id="driveXIcon" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#ff5e7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </div>
+  </div>
+  <div id="driveStatusText" style="font-family:'Figtree',sans-serif;font-size:16px;font-weight:600;color:var(--text)">Uploading to Drive...</div>
 </div>
 
 <!-- ══ SLIDE-UP NUMPAD OVERLAY (review screen editing) ══ -->
@@ -1037,13 +1079,90 @@ refreshNext = function() {
   syncQwertyButtons();
 };
 
+// ── EXPORT SHEET ──
+let _exportContext = 'review';
+function openExport(ctx) {
+  _exportContext = ctx;
+  document.getElementById('exportOverlay').style.display = 'block';
+  setTimeout(() => { document.getElementById('exportSheet').style.bottom = '0'; }, 10);
+}
+function closeExport() {
+  document.getElementById('exportSheet').style.bottom = '-400px';
+  setTimeout(() => { document.getElementById('exportOverlay').style.display = 'none'; }, 300);
+}
+async function exportAction(type) {
+  const isPast = _exportContext === 'past';
+  closeExport();
+  await new Promise(r => setTimeout(r, 320)); // let sheet close first
+  if (type === 'drive')      { isPast ? savePastToDrive()  : saveToDrive(); }
+  else if (type === 'email') { isPast ? sendPastEmail()    : sendEmail(); }
+  else if (type === 'clipboard') { isPast ? copyPast()     : finalise(); }
+  else if (type === 'json')  { isPast ? dlPastJSON()       : dlJSON(); }
+  else if (type === 'csv')   { isPast ? dlPastCSV()        : dlCSV(); }
+}
+
 // ── GOOGLE DRIVE UPLOAD ──
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6jkcvoMrJ4XJUWAl_fUpv0bRNeHYTpUX64wCU534_HW7NxB3oJKLw9ogxP7-CwJno/exec';
 
+function showDriveLoading() {
+  const ov = document.getElementById('driveLoadingOverlay');
+  ov.style.display = 'flex';
+  // Reset state
+  document.getElementById('driveArc').style.strokeDashoffset = '239';
+  document.getElementById('driveArc').style.stroke = 'var(--accent)';
+  document.getElementById('driveUpIcon').style.display = '';
+  document.getElementById('driveCheckIcon').style.display = 'none';
+  document.getElementById('driveXIcon').style.display = 'none';
+  document.getElementById('driveStatusText').textContent = 'Uploading to Drive...';
+  document.getElementById('driveStatusText').style.color = 'var(--text)';
+  // Animate arc filling
+  setTimeout(() => { document.getElementById('driveArc').style.strokeDashoffset = '60'; }, 50);
+}
+function showDriveSuccess() {
+  document.getElementById('driveArc').style.strokeDashoffset = '0';
+  document.getElementById('driveStatusText').textContent = 'Saved to Drive';
+  document.getElementById('driveStatusText').style.color = 'var(--accent)';
+  setTimeout(() => {
+    document.getElementById('driveUpIcon').style.display = 'none';
+    document.getElementById('driveCheckIcon').style.display = '';
+  }, 400);
+  setTimeout(() => { document.getElementById('driveLoadingOverlay').style.display = 'none'; }, 2200);
+}
+function showDriveError() {
+  document.getElementById('driveArc').style.stroke = '#ff5e7a';
+  document.getElementById('driveArc').style.strokeDashoffset = '180';
+  document.getElementById('driveStatusText').textContent = 'Upload failed';
+  document.getElementById('driveStatusText').style.color = '#ff5e7a';
+  setTimeout(() => {
+    document.getElementById('driveUpIcon').style.display = 'none';
+    document.getElementById('driveXIcon').style.display = '';
+  }, 300);
+  setTimeout(() => { document.getElementById('driveLoadingOverlay').style.display = 'none'; }, 2500);
+}
+
+async function savePastToDrive() {
+  if (!pastOrder) return;
+  showDriveLoading();
+  try {
+    const date = pastOrder.isoDate;
+    const base = `${pastOrder.operator||''}${pastOrder.operator?'_':''}${pastOrder.store.replace(/ /g,'_')}_${date}`;
+    const ord = pastOrder.items;
+    const jsonContent = JSON.stringify({store:pastOrder.store,date,items:ord.map(i=>({item:i.itemNum,order:(i.cases&&i.order>0)?-i.order:i.order,qoh:i.qoh}))},null,2);
+    let csvContent = 'Store,Date,Item #,Order Qty,Cases,On Hand\n';
+    ord.forEach(i=>{const a=Math.abs(i.order);const c=i.cases?(a===1?'case':'cases'):'';csvContent+=`"${pastOrder.store}","${date}","${i.itemNum}",${a},"${c}",${i.qoh}\n`;});
+    await Promise.all([
+      fetch(APPS_SCRIPT_URL, {method:'POST', body:JSON.stringify({filename:base+'.json',content:jsonContent})}),
+      fetch(APPS_SCRIPT_URL, {method:'POST', body:JSON.stringify({filename:base+'.csv', content:csvContent})})
+    ]);
+    showDriveSuccess();
+  } catch(e) {
+    showDriveError();
+    console.error('Drive upload error:', e);
+  }
+}
+
 async function saveToDrive() {
-  const btn = document.getElementById('driveBtn');
-  const orig = btn.textContent;
-  btn.textContent = 'Uploading...'; btn.disabled = true;
+  showDriveLoading();
   try {
     const date = new Date().toLocaleDateString('en-CA');
     const base = `${operator}_${store.replace(/ /g,'_')}_${date}`;
@@ -1051,17 +1170,13 @@ async function saveToDrive() {
     const jsonContent = JSON.stringify({store,date,items:ord.map(i=>({item:i.itemNum,order:i.cases?-i.order:i.order,qoh:i.qoh}))},null,2);
     let csvContent = 'Store,Date,Item #,Order Qty,Cases,On Hand\n';
     ord.forEach(i=>{const a=Math.abs(i.order);const c=i.cases?(a===1?'case':'cases'):'';csvContent+=`"${store}","${date}","${i.itemNum}",${a},"${c}",${i.qoh}\n`;});
-
     await Promise.all([
       fetch(APPS_SCRIPT_URL, {method:'POST', body:JSON.stringify({filename:base+'.json',content:jsonContent})}),
       fetch(APPS_SCRIPT_URL, {method:'POST', body:JSON.stringify({filename:base+'.csv', content:csvContent})})
     ]);
-
-    btn.textContent = '✓ Saved to Drive'; btn.style.color = 'var(--accent)';
-    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; btn.disabled=false; }, 3000);
+    showDriveSuccess();
   } catch(e) {
-    btn.textContent = 'Upload failed'; btn.style.color = 'var(--red)';
-    setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; btn.disabled=false; }, 3000);
+    showDriveError();
     console.error('Drive upload error:', e);
   }
 }

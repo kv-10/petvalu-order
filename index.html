@@ -242,12 +242,13 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 
 <!-- ══ STORE SELECT ══ -->
 <div id="s-operator" class="screen active" style="justify-content:center;padding:0 28px">
-  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.2</span></div>
+  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.3.1</span></div>
   <div class="store-heading">Who is doing<br>the order?</div>
   <div class="store-list">
     <button class="store-btn" onclick="selectOperator('Nipun')"><span class="store-btn-name">Nipun</span><span class="store-btn-arr">›</span></button>
     <button class="store-btn" onclick="selectOperator('Shruti')"><span class="store-btn-name">Shruti</span><span class="store-btn-arr">›</span></button>
   </div>
+  <div style="position:absolute;bottom:28px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted);letter-spacing:0.5px;font-family:'Figtree',sans-serif">made by <span style="color:var(--text2);font-weight:600">Ketan Vashisht</span></div>
 </div>
 
 <div id="s-store" class="screen">
@@ -451,7 +452,7 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 </div>
 
 <div id="exportOverlay" onclick="closeExport()" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(6,9,16,0.7);backdrop-filter:blur(3px)"></div>
-<div id="exportSheet" style="position:fixed;bottom:-400px;left:0;right:0;z-index:201;background:var(--s1);border-radius:24px 24px 0 0;border-top:1px solid var(--border);padding:0 18px 36px;transition:bottom 0.3s cubic-bezier(0.32,0.72,0,1)">
+<div id="exportSheet" style="position:fixed;bottom:0;left:0;right:0;z-index:201;background:var(--s1);border-radius:24px 24px 0 0;border-top:1px solid var(--border);padding:0 18px 36px;transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);transform:translateY(110%)">
   <div style="width:40px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 20px"></div>
   <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:14px">Export</div>
   <div style="display:flex;flex-direction:column;gap:10px">
@@ -577,6 +578,7 @@ function archiveOrder() {
 
 // ── NAVIGATION ──
 function goTo(id) {
+  closeExport();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
@@ -1122,10 +1124,10 @@ function openExport(ctx) {
   _exportContext = ctx;
   document.getElementById('exportSaveAndClearWrap').style.display = ctx === 'past' ? 'none' : 'block';
   document.getElementById('exportOverlay').style.display = 'block';
-  setTimeout(() => { document.getElementById('exportSheet').style.bottom = '0'; }, 10);
+  setTimeout(() => { document.getElementById('exportSheet').style.transform = 'translateY(0)'; }, 10);
 }
 function closeExport() {
-  document.getElementById('exportSheet').style.bottom = '-400px';
+  document.getElementById('exportSheet').style.transform = 'translateY(110%)';
   setTimeout(() => { document.getElementById('exportOverlay').style.display = 'none'; }, 300);
 }
 async function exportAction(type) {

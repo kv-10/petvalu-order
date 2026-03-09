@@ -242,7 +242,7 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 
 <!-- ══ STORE SELECT ══ -->
 <div id="s-operator" class="screen active" style="justify-content:center;padding:0 28px">
-  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.3.1</span></div>
+  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.4</span></div>
   <div class="store-heading">Who is doing<br>the order?</div>
   <div class="store-list">
     <button class="store-btn" onclick="selectOperator('Nipun')"><span class="store-btn-name">Nipun</span><span class="store-btn-arr">›</span></button>
@@ -384,18 +384,23 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
     <div id="rList"></div>
   </div>
 
-  <div style="padding:10px 18px 12px;flex-shrink:0;display:flex;gap:8px">
+  <div style="padding:10px 18px 4px;flex-shrink:0;display:flex;gap:8px">
     <button class="btn-ghost" style="flex:1" onclick="goTo('s-entry')">Continue Adding Items</button>
     <button onclick="openExport('review')" style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:var(--accent);color:#060910;border:none;border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
       Export
     </button>
   </div>
+  <div style="padding:0 18px 12px;flex-shrink:0">
+    <button id="clearOrderBtn" onclick="confirmSaveAndClear()" disabled style="width:100%;padding:12px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:14px;font-weight:600;cursor:not-allowed;opacity:0.4;transition:all 0.2s">
+      Clear Order &amp; Exit
+    </button>
+  </div>
 </div>
 
-<!-- ══ HISTORY ══ -->
-<div id="s-history" class="screen">
-  <div class="topbar">
+<!-- ══ HISTORY BRANCH ══ -->
+<div id="s-history" class="screen" style="justify-content:center;padding:0 28px">
+  <div class="topbar" style="position:absolute;top:0;left:0;right:0">
     <button class="back-btn" onclick="goTo('s-store')">
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       Back
@@ -405,13 +410,78 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
     </div>
     <div style="width:10px"></div>
   </div>
+  <div style="width:100%">
+    <button onclick="goTo('s-history-local'); renderHistLocal()" style="width:100%;padding:20px 22px;background:var(--s2);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);font-family:'Figtree',sans-serif;margin-bottom:4px">This Device</div>
+        <div style="font-size:12px;color:var(--muted);font-family:'Figtree',sans-serif">Orders saved on this phone</div>
+      </div>
+      <span style="color:var(--accent);font-size:22px;font-weight:700">›</span>
+    </button>
+    <button onclick="goTo('s-history-cloud'); renderHistCloud()" style="width:100%;padding:20px 22px;background:var(--s2);border:1px solid var(--accent);border-radius:16px;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);font-family:'Figtree',sans-serif;margin-bottom:4px">All Stores <span style="font-size:10px;font-weight:700;color:var(--accent);background:rgba(0,200,150,0.12);border:1px solid var(--accent);border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle">LIVE</span></div>
+        <div style="font-size:12px;color:var(--muted);font-family:'Figtree',sans-serif">Uploaded orders from everyone</div>
+      </div>
+      <span style="color:var(--accent);font-size:22px;font-weight:700">›</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ LOCAL HISTORY ══ -->
+<div id="s-history-local" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-history')">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="topbar-center" style="text-align:center">
+      <div class="topbar-title">This Device</div>
+    </div>
+    <div style="width:10px"></div>
+  </div>
+  <!-- Store filter dropdown trigger -->
+  <div style="padding:10px 18px 0;flex-shrink:0">
+    <button id="localFilterBtn" onclick="toggleStoreFilter('local')" style="width:100%;padding:11px 16px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text2);font-family:'Figtree',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <span id="localFilterLabel">All Stores</span>
+      <svg id="localFilterArrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </div>
   <div class="hist-scroll" id="hScroll"></div>
+</div>
+
+<!-- ══ CLOUD HISTORY ══ -->
+<div id="s-history-cloud" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('s-history')">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="topbar-center" style="text-align:center">
+      <div class="topbar-title">All Stores</div>
+    </div>
+    <div style="width:10px"></div>
+  </div>
+  <!-- Store filter dropdown trigger -->
+  <div style="padding:10px 18px 0;flex-shrink:0">
+    <button id="cloudFilterBtn" onclick="toggleStoreFilter('cloud')" style="width:100%;padding:11px 16px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text2);font-family:'Figtree',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <span id="cloudFilterLabel">All Stores</span>
+      <svg id="cloudFilterArrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </div>
+  <div class="hist-scroll" id="hScrollCloud"></div>
+</div>
+
+<!-- Store filter dropdown sheet -->
+<div id="storeFilterOverlay" onclick="closeStoreFilter()" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(6,9,16,0.5)"></div>
+<div id="storeFilterSheet" style="position:fixed;top:-300px;left:18px;right:18px;z-index:201;background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:8px;transition:top 0.25s cubic-bezier(0.32,0.72,0,1)">
+  <div id="storeFilterOptions"></div>
 </div>
 
 <!-- ══ PAST ORDER ══ -->
 <div id="s-past" class="screen">
   <div class="topbar">
-    <button class="back-btn" onclick="goTo('s-history')">
+    <button class="back-btn" id="pastBackBtn" onclick="goTo('s-history-local')">
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </button>
@@ -443,11 +513,11 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 <!-- SAVE & CLEAR CONFIRM MODAL -->
 <div id="saveAndClearOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(6,9,16,0.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px"></div>
 <div id="saveAndClearModal" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:301;background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:24px;width:calc(100% - 48px);max-width:360px">
-  <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:8px">Save & Clear?</div>
-  <div style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.5">Order uploaded to Drive. Save it to history and clear the current order?</div>
+  <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">Uploaded to Drive ✓</div>
+  <div style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.5">Clear this order and start fresh for the next one?</div>
   <div style="display:flex;gap:10px">
-    <button onclick="dismissSaveAndClear()" style="flex:1;padding:13px;background:var(--s2);color:var(--text2);border:1px solid var(--border);border-radius:12px;font-family:'Figtree',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Not Now</button>
-    <button onclick="confirmSaveAndClear()" style="flex:1;padding:13px;background:var(--accent);color:#060910;border:none;border-radius:12px;font-family:'Figtree',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Save &amp; Clear</button>
+    <button onclick="dismissSaveAndClear()" style="flex:1;padding:13px;background:var(--s2);color:var(--text2);border:1px solid var(--border);border-radius:12px;font-family:'Figtree',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Keep Order</button>
+    <button onclick="confirmSaveAndClear()" style="flex:1;padding:13px;background:var(--accent);color:#060910;border:none;border-radius:12px;font-family:'Figtree',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Clear Order</button>
   </div>
 </div>
 
@@ -464,9 +534,7 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
     <button onclick="exportAction('clipboard')" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:left">Save to Clipboard</button>
     <button onclick="exportAction('json')" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:left">Save as .JSON</button>
     <button onclick="exportAction('csv')" style="width:100%;padding:14px;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:left">Save as .CSV (Excel)</button>
-    <div id="exportSaveAndClearWrap" style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border)">
-      <button onclick="exportAction('saveandclear')" style="width:100%;padding:14px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:14px;font-family:'Figtree',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-align:left">✓ Save to History &amp; Clear</button>
-    </div>
+
   </div>
 </div>
 
@@ -784,6 +852,7 @@ function renderEntryItems() {
 
 // ── REVIEW SCREEN ──
 function goToReview() {
+  resetClearBtn();
   const s = document.getElementById('rSearch'); if(s) s.value='';
   filterReview('');
   const ord = items.filter(i=>i.itemNum);
@@ -876,34 +945,179 @@ function saveOverlayEdit() {
 }
 
 // ── HISTORY ──
-function renderHist() {
-  const hist=loadHist(), sc=document.getElementById('hScroll');
-  if (!hist.length) { sc.innerHTML='<div class="empty"><div style="font-size:32px;opacity:0.2">◷</div><p>No past orders yet.<br>Complete an order to see it here.</p></div>'; return; }
-  const g={};
-  hist.forEach(o=>{if(!g[o.store])g[o.store]=[];g[o.store].push(o);});
-  sc.innerHTML=Object.keys(g).map(s=>
-    `<div class="h-group">${s}</div>`+
-    g[s].map(o=>`<div class="h-card" onclick="viewPast(${o.id})">
+let _localStoreFilter = null;
+let _cloudStoreFilter = null;
+let _storeFilterContext = null;
+let _cloudOrders = [];
+let _isCloudOrder = false;
+const STORES = ['Lakeshore Rd', 'Lambton Mall', 'Corunna', 'London'];
+
+function renderHistLocal() {
+  const hist = loadHist();
+  const filtered = _localStoreFilter ? hist.filter(o => o.store === _localStoreFilter) : hist;
+  const sc = document.getElementById('hScroll');
+  document.getElementById('localFilterLabel').textContent = _localStoreFilter || 'All Stores';
+  if (!filtered.length) {
+    sc.innerHTML = '<div class="empty"><div style="font-size:32px;opacity:0.2">◷</div><p>' + (_localStoreFilter ? 'No orders for this store.' : 'No past orders yet.') + '</p></div>';
+    return;
+  }
+  const g = {};
+  filtered.forEach(o => { if (!g[o.store]) g[o.store] = []; g[o.store].push(o); });
+  sc.innerHTML = Object.keys(g).map(s =>
+    `<div class="h-group">${s}</div>` +
+    g[s].map(o => `<div class="h-card" data-local-id="${o.id}">
       <div><div class="hc-date">${o.date}</div><div class="hc-meta">${o.items.length} items ordered</div></div>
       <div class="hc-right"><span class="hc-cnt">${o.items.length}</span><span class="hc-arr">›</span>
-      <button class="hc-del" onclick="event.stopPropagation();delHist(${o.id})">✕</button></div>
+      <button class="hc-del" data-del-id="${o.id}">✕</button></div>
     </div>`).join('')
   ).join('');
+  // Event delegation for local history cards
+  sc.querySelectorAll('[data-local-id]').forEach(el => {
+    el.addEventListener('click', () => viewPastLocal(parseInt(el.dataset.localId)));
+  });
+  sc.querySelectorAll('[data-del-id]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); delHist(parseInt(el.dataset.delId)); });
+  });
 }
-function delHist(id) { if(!confirm('Delete this order?'))return; saveHist(loadHist().filter(o=>o.id!==id)); renderHist(); }
-function viewPast(id) {
+// keep renderHist as alias so existing calls still work
+function renderHist() { renderHistLocal(); }
+
+async function renderHistCloud() {
+  const sc = document.getElementById('hScrollCloud');
+  document.getElementById('cloudFilterLabel').textContent = _cloudStoreFilter || 'All Stores';
+  sc.innerHTML = '<div class="empty"><div style="font-size:28px;opacity:0.3">☁</div><p>Loading from Drive...</p></div>';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + '?action=list');
+    const data = await res.json();
+    if (!data.success) throw new Error('Drive error');
+    _cloudOrders = data.files.map(f => {
+      const parts = f.name.replace('.json','').split('_');
+      const date = parts[parts.length-1];
+      const storeRaw = parts.slice(1, parts.length-1).join(' ');
+      const store = STORES.find(s => s.replace(/ /g,'_') === storeRaw) || storeRaw.replace(/_/g,' ');
+      const operator = parts[0];
+      return { id: f.id, name: f.name, store, operator, date };
+    });
+    renderCloudList();
+  } catch(e) {
+    sc.innerHTML = '<div class="empty"><div style="font-size:28px;opacity:0.3">☁</div><p>Could not load from Drive.<br>Check your connection.</p></div>';
+  }
+}
+
+function renderCloudList() {
+  const sc = document.getElementById('hScrollCloud');
+  const filtered = _cloudStoreFilter ? _cloudOrders.filter(o => o.store === _cloudStoreFilter) : _cloudOrders;
+  document.getElementById('cloudFilterLabel').textContent = _cloudStoreFilter || 'All Stores';
+  if (!filtered.length) {
+    sc.innerHTML = '<div class="empty"><div style="font-size:28px;opacity:0.3">☁</div><p>' + (_cloudStoreFilter ? 'No orders for this store.' : 'No orders found.') + '</p></div>';
+    return;
+  }
+  const g = {};
+  filtered.forEach(o => { if (!g[o.store]) g[o.store] = []; g[o.store].push(o); });
+  sc.innerHTML = Object.keys(g).map(s =>
+    `<div class="h-group">${s}</div>` +
+    g[s].map(o => `<div class="h-card" data-cloud-id="${o.id}" data-cloud-name="${o.name}">
+      <div><div class="hc-date">${o.date}</div><div class="hc-meta">${o.operator}</div></div>
+      <div class="hc-right"><span class="hc-arr">›</span></div>
+    </div>`).join('')
+  ).join('');
+  sc.querySelectorAll('[data-cloud-id]').forEach(el => {
+    el.addEventListener('click', () => viewPastCloud(el.dataset.cloudId, el.dataset.cloudName));
+  });
+}
+
+function delHist(id) { if(!confirm('Delete this order?'))return; saveHist(loadHist().filter(o=>o.id!==id)); renderHistLocal(); }
+
+function viewPastLocal(id) {
+  _isCloudOrder = false;
+  document.getElementById('pastBackBtn').onclick = () => goTo('s-history-local');
   const s = document.getElementById('pSearch'); if(s) s.value='';
-  pastOrder=loadHist().find(o=>o.id===id); if(!pastOrder)return;
-  document.getElementById('pTitle').textContent=pastOrder.store;
-  document.getElementById('pStore').textContent=pastOrder.store;
-  document.getElementById('pMeta').textContent=pastOrder.date+' · '+pastOrder.items.length+' items';
-  document.getElementById('pList').innerHTML=pastOrder.items.map(i=>{
+  pastOrder = loadHist().find(o => o.id===id); if(!pastOrder) return;
+  document.getElementById('pTitle').textContent = pastOrder.store;
+  document.getElementById('pStore').textContent = pastOrder.store;
+  document.getElementById('pMeta').textContent = pastOrder.date + ' · ' + pastOrder.items.length + ' items';
+  renderPastList(pastOrder.items);
+  document.getElementById('exportDriveBtn').style.display = 'flex';
+  goTo('s-past');
+}
+
+async function viewPastCloud(fileId, filename) {
+  _isCloudOrder = true;
+  document.getElementById('pastBackBtn').onclick = () => goTo('s-history-cloud');
+  const s = document.getElementById('pSearch'); if(s) s.value='';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + '?action=get&id=' + fileId);
+    const data = await res.json();
+    if (!data.success) throw new Error('bad');
+    const parts = filename.replace('.json','').split('_');
+    const date = parts[parts.length-1];
+    const storeRaw = parts.slice(1, parts.length-1).join('_');
+    const store = STORES.find(s => s.replace(/ /g,'_') === storeRaw) || storeRaw.replace(/_/g,' ');
+    pastOrder = { store, date, isoDate: date, items: data.content.items.map(i => ({ itemNum: i.item, order: Math.abs(i.order), cases: i.order < 0, qoh: i.qoh })) };
+    document.getElementById('pTitle').textContent = store;
+    document.getElementById('pStore').textContent = store;
+    document.getElementById('pMeta').textContent = date + ' · ' + pastOrder.items.length + ' items';
+    renderPastList(pastOrder.items);
+    document.getElementById('exportDriveBtn').style.display = 'none';
+    goTo('s-past');
+  } catch(e) {
+    showToast('Could not load order');
+  }
+}
+
+function renderPastList(items) {
+  document.getElementById('pList').innerHTML = items.map(i => {
     const isCases = i.order < 0 || i.cases;
     const absOrder = Math.abs(i.order);
     const orderDisplay = isCases ? absOrder + '<span style="color:var(--accent);font-size:10px;font-weight:700;display:block;line-height:1.2">' + (absOrder===1?'case':'cases') + '</span>' : absOrder;
     return `<div class="t-row"><div class="t-item">${i.itemNum}</div><div class="t-order">${orderDisplay}</div><div class="t-qoh">${i.qoh}</div></div>`;
   }).join('');
-  goTo('s-past');
+}
+function viewPast(id) { viewPastLocal(id); } // legacy alias
+
+// ── STORE FILTER DROPDOWN ──
+function toggleStoreFilter(ctx) {
+  const sheet = document.getElementById('storeFilterSheet');
+  const isOpen = sheet.style.top === '60px';
+  if (isOpen) { closeStoreFilter(); return; }
+  _storeFilterContext = ctx;
+  const btn = document.getElementById(ctx + 'FilterBtn');
+  const rect = btn.getBoundingClientRect();
+  sheet.style.top = (rect.bottom + 6) + 'px';
+  const currentFilter = ctx === 'local' ? _localStoreFilter : _cloudStoreFilter;
+  const opts = [null, ...STORES];
+  const wrap = document.getElementById('storeFilterOptions');
+  wrap.innerHTML = opts.map((s, i) => {
+    const active = s === currentFilter || (!s && !currentFilter);
+    return `<div data-fi="${i}" style="padding:13px 16px;border-radius:10px;cursor:pointer;font-family:'Figtree',sans-serif;font-size:15px;font-weight:${active?'700':'500'};color:${active?'var(--accent)':'var(--text)'};display:flex;align-items:center;justify-content:space-between">
+      <span>${s || 'All Stores'}</span>${active ? '<span style="color:var(--accent)">✓</span>' : ''}
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('[data-fi]').forEach(el => {
+    el.addEventListener('click', () => selectStoreFilter(opts[parseInt(el.dataset.fi)] || null));
+  });
+  document.getElementById('storeFilterOverlay').style.display = 'block';
+  document.getElementById(ctx + 'FilterArrow').style.transform = 'rotate(180deg)';
+}
+
+function closeStoreFilter() {
+  document.getElementById('storeFilterSheet').style.top = '-300px';
+  document.getElementById('storeFilterOverlay').style.display = 'none';
+  if (_storeFilterContext) {
+    document.getElementById(_storeFilterContext + 'FilterArrow').style.transform = 'rotate(0deg)';
+  }
+}
+
+function selectStoreFilter(store) {
+  if (_storeFilterContext === 'local') {
+    _localStoreFilter = store;
+    closeStoreFilter();
+    renderHistLocal();
+  } else {
+    _cloudStoreFilter = store;
+    closeStoreFilter();
+    renderCloudList();
+  }
 }
 function copyPast() {
   if(!pastOrder)return;
@@ -996,14 +1210,23 @@ function dlCSV() {
 }
 
 // ── SAVE & CLEAR ──
-function saveAndClear() {
-  archiveOrder();
-  clearDraft();
-  items = []; nextId = 1;
-  renderStoreBtns();
-  closeExport();
-  goTo('s-store');
-  showToast('Saved to history');
+function unlockClearBtn() {
+  const btn = document.getElementById('clearOrderBtn');
+  if (!btn) return;
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+  btn.style.color = 'var(--red)';
+  btn.style.borderColor = 'var(--red)';
+}
+function resetClearBtn() {
+  const btn = document.getElementById('clearOrderBtn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.style.opacity = '0.4';
+  btn.style.cursor = 'not-allowed';
+  btn.style.color = 'var(--muted)';
+  btn.style.borderColor = 'var(--border)';
 }
 function showSaveAndClearModal() {
   document.getElementById('saveAndClearOverlay').style.display = 'flex';
@@ -1015,7 +1238,13 @@ function dismissSaveAndClear() {
 }
 function confirmSaveAndClear() {
   dismissSaveAndClear();
-  saveAndClear();
+  // Already archived in saveToDrive — just clear the entry screen
+  items = []; nextId = 1;
+  renderStoreBtns();
+  resetClearBtn();
+  closeExport();
+  goTo('s-store');
+  showToast('Order cleared');
 }
 
 // ── UTILS ──
@@ -1122,7 +1351,6 @@ refreshNext = function() {
 let _exportContext = 'review';
 function openExport(ctx) {
   _exportContext = ctx;
-  document.getElementById('exportSaveAndClearWrap').style.display = ctx === 'past' ? 'none' : 'block';
   document.getElementById('exportOverlay').style.display = 'block';
   setTimeout(() => { document.getElementById('exportSheet').style.transform = 'translateY(0)'; }, 10);
 }
@@ -1196,7 +1424,6 @@ async function savePastToDrive() {
       fetch(APPS_SCRIPT_URL, {method:'POST', body:JSON.stringify({filename:base+'.csv', content:csvContent})})
     ]);
     showDriveSuccess();
-    setTimeout(() => showSaveAndClearModal(), 1200);
   } catch(e) {
     showDriveError();
     console.error('Drive upload error:', e);
@@ -1216,6 +1443,10 @@ async function saveToDrive() {
       fetch(APPS_SCRIPT_URL, {method:'POST', body:JSON.stringify({filename:base+'.json',content:jsonContent})}),
       fetch(APPS_SCRIPT_URL, {method:'POST', body:JSON.stringify({filename:base+'.csv', content:csvContent})})
     ]);
+    // Save to local history before prompting clear
+    archiveOrder();
+    clearDraft();
+    unlockClearBtn();
     showDriveSuccess();
     setTimeout(() => showSaveAndClearModal(), 1200);
   } catch(e) {

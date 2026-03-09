@@ -6,11 +6,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PV Order">
+<meta name="apple-mobile-web-app-title" content="Project: Herald">
 <meta name="theme-color" content="#060910">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Pet Valu Order</title>
+<title>Project: Herald</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -243,13 +243,94 @@ body { font-family: 'Figtree', sans-serif; color: var(--text); height: 100dvh; d
 /* ── TOAST ── */
 #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--s3); border: 1px solid var(--border2); color: var(--text); padding: 11px 22px; border-radius: 99px; font-weight: 700; font-size: 13px; white-space: nowrap; z-index: 999; opacity: 0; transition: all 0.22s; pointer-events: none; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── STARTUP SCREEN ── */
+#startupScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 32px;
+}
+.su-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+  opacity: 0; animation: suFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.2s;
+}
+.su-tagline {
+  font-size: 12px; color: var(--muted); margin-bottom: 44px;
+  opacity: 0; animation: suFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.45s;
+  letter-spacing: 0.5px;
+}
+.su-steps { width: 100%; max-width: 320px; }
+.su-step {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 0; border-bottom: 1px solid var(--border);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+.su-step:last-child { border-bottom: none; }
+.su-step.vis { opacity: 1; transform: translateY(0); }
+.su-icon {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; background: var(--s2); border: 1.5px solid var(--border);
+  transition: background 0.3s, border-color 0.3s;
+}
+.su-icon.spin {
+  border-color: var(--accent); border-top-color: transparent;
+  animation: suSpin 0.7s linear infinite;
+}
+.su-icon.ok   { background: var(--accentd); border-color: var(--accent); }
+.su-icon.warn { background: rgba(245,200,66,0.12); border-color: #f5c842; }
+.su-icon.err  { background: var(--redd); border-color: var(--red); }
+.su-label { font-size: 14px; font-weight: 700; color: var(--text); }
+.su-sub   { font-size: 12px; color: var(--text2); margin-top: 3px; min-height: 16px; }
+@keyframes suFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes suSpin {
+  from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
 
 <!-- ══ STORE SELECT ══ -->
+<!-- ══ STARTUP SCREEN ══ -->
+<div id="startupScreen">
+  <div class="su-logo">Project: Herald</div>
+  <div class="su-tagline">Pet Valu Order System</div>
+  <div class="su-steps">
+    <div class="su-step" id="suStep1">
+      <div class="su-icon" id="suIcon1">⋯</div>
+      <div>
+        <div class="su-label">Initializing</div>
+        <div class="su-sub" id="suSub1">Starting up...</div>
+      </div>
+    </div>
+    <div class="su-step" id="suStep2">
+      <div class="su-icon" id="suIcon2">⋯</div>
+      <div>
+        <div class="su-label">Checking for updates</div>
+        <div class="su-sub" id="suSub2">Waiting...</div>
+      </div>
+    </div>
+    <div class="su-step" id="suStep3">
+      <div class="su-icon" id="suIcon3">⋯</div>
+      <div>
+        <div class="su-label">Loading</div>
+        <div class="su-sub" id="suSub3">Preparing...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="s-operator" class="screen active" style="justify-content:center;padding:0 28px">
-  <div class="brand-line">Pet Valu <span style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.4</span></div>
+  <div class="brand-line">Project: Herald <span id="appVersionBadge" style="color:var(--accent);font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;vertical-align:middle;margin-left:6px">v2.4</span></div>
   <div class="store-heading">Who is doing<br>the order?</div>
   <div class="store-list">
     <button class="store-btn" onclick="selectOperator('Nipun')"><span class="store-btn-name">Nipun</span><span class="store-btn-arr">›</span></button>
@@ -1323,6 +1404,93 @@ function setOverlayCasesMode(val) {
 
 // ── INIT ──
 refreshDisp(); refreshNext(); refreshReview();
+
+// ── STARTUP SEQUENCE ──
+const APP_VERSION = 'v2.4';
+const VERSION_URL = 'https://kv-10.github.io/petvalu-order/version.json';
+
+function suIcon(id, cls, content) {
+  const el = document.getElementById('suIcon' + id);
+  if (el) { el.className = 'su-icon ' + cls; el.textContent = content; }
+}
+function suSub(id, text) {
+  const el = document.getElementById('suSub' + id);
+  if (el) el.textContent = text;
+}
+function suShow(id) {
+  const el = document.getElementById('suStep' + id);
+  if (el) setTimeout(() => el.classList.add('vis'), 50);
+}
+function suHide() {
+  const el = document.getElementById('startupScreen');
+  if (!el) return;
+  el.style.transition = 'opacity 0.5s ease';
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; }, 500);
+}
+
+async function runStartup() {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // Step 1: Init
+  await sleep(400); // let logo/tagline animate in first
+  suShow(1);
+  await sleep(200);
+  suIcon(1, 'spin', '');
+  suSub(1, 'Loading app...');
+  await sleep(900);
+  suIcon(1, 'ok', '✓');
+  suSub(1, 'Loaded');
+
+  // Step 2: Update check
+  await sleep(350);
+  suShow(2);
+  await sleep(200);
+  suIcon(2, 'spin', '');
+  suSub(2, 'Checking for updates...');
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(VERSION_URL + '?t=' + Date.now(), {
+      cache: 'no-store', signal: controller.signal
+    });
+    clearTimeout(timeout);
+    const data = await res.json();
+    const latest = data.version;
+    if (latest && latest !== APP_VERSION) {
+      suIcon(2, 'warn', '↑');
+      suSub(2, 'New version ' + latest + ' found...');
+      await sleep(800);
+      suSub(2, 'Reloading with latest version...');
+      await sleep(1000);
+      window.location.href = window.location.href.split('?')[0] + '?v=' + latest;
+      return;
+    } else {
+      await sleep(600); // let spinner breathe
+      suIcon(2, 'ok', '✓');
+      suSub(2, 'Up to date (' + APP_VERSION + ')');
+    }
+  } catch(e) {
+    await sleep(600);
+    suIcon(2, 'err', '!');
+    suSub(2, 'Could not check — continuing');
+  }
+
+  // Step 3: Ready
+  await sleep(350);
+  suShow(3);
+  await sleep(200);
+  suIcon(3, 'spin', '');
+  suSub(3, 'Preparing...');
+  await sleep(800);
+  suIcon(3, 'ok', '✓');
+  suSub(3, 'Ready');
+  await sleep(700);
+  suHide();
+}
+
+runStartup();
 
 // ── KEYBOARD TOGGLE ──
 let kbdMode = 'num'; // 'num' | 'abc'

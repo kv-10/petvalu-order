@@ -568,7 +568,7 @@ body::after {
     <!-- Title + version -->
     <div style="opacity:0;animation:suFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards 0.2s;margin-bottom:32px">
       <div class="brand-line" style="font-size:16px;letter-spacing:5px;margin-bottom:10px">Project: Herald</div>
-      <div id="appVersionBadge" style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--muted);letter-spacing:2px">v3.2.0-beta</div>
+      <div id="appVersionBadge" style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--muted);letter-spacing:2px">v3.0.0</div>
     </div>
 
     <!-- Heading -->
@@ -1041,7 +1041,7 @@ const HK = 'pv_hist_v4', DP = 'pv_draft_v4_';
 // ── CATALOG ──
 let catalog = {};
 let catalogLoaded = false;
-const CATALOG_URL = 'https://kv-10.github.io/petvalu-order/catalog.json';
+const CATALOG_URL = 'https://petvalu-bot.vercel.app/catalog.json';
 
 async function loadCatalog() {
   const urls = [
@@ -2029,7 +2029,7 @@ function setOverlayCasesMode(val) {
 refreshDisp(); refreshNext(); refreshReview();
 
 // ── STARTUP SEQUENCE ──
-const APP_VERSION = 'v3.2.0-beta';
+const APP_VERSION = 'v3.0.0';
 const VERSION_URL = 'https://petvalu-bot.vercel.app/version.json';
 
 function suIcon(id, cls, content) {

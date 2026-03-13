@@ -993,7 +993,7 @@ body::after {
           <div class="cat-stat-val mono" id="catPopSize">—</div>
         </div>
         <div class="cat-stat" id="catPopSubCard" style="display:none">
-          <div class="cat-stat-label">Substituted By</div>
+          <div class="cat-stat-label">Previous Item #</div>
           <div class="cat-stat-val mono" id="catPopSubNum" style="font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px" onclick="jumpToSub()">—</div>
         </div>
       </div>
@@ -1808,7 +1808,12 @@ function showCatalogPopup(itemNum) {
   if (!info) return;
 
   const displayDesc = info.search
-    ? info.search.replace(/\b\w/g, c => c.toUpperCase())
+    ? info.search.replace(/\b([a-z]+)\b/g, w => {
+        const up = w.toUpperCase();
+        // Preserve roman numerals and other intentionally all-caps tokens
+        const ROMAN = new Set(['II','III','IV','VI','VII','VIII','IX','XI','XII']);
+        return ROMAN.has(up) ? up : w.charAt(0).toUpperCase() + w.slice(1);
+      })
     : null;
   const rawChanged = displayDesc && displayDesc.toLowerCase() !== info.desc.toLowerCase();
   document.getElementById('catPopItemNum').textContent  = 'ITEM #' + resolvedNum;
@@ -1966,7 +1971,10 @@ function renderCatalogResults(q) {
     const isNumMatch = key.toLowerCase().includes(ql);
     const isSubMatch = (info.sub || '') === q || (info.sub || '').startsWith(q);
     const sz = parseSize(info.desc);
-    const displayDesc = info.search ? info.search.replace(/\b\w/g, c => c.toUpperCase()) : null;
+    const displayDesc = info.search ? info.search.replace(/\b([a-z]+)\b/g, w => {
+      const ROMAN = new Set(['II','III','IV','VI','VII','VIII','IX','XI','XII']);
+      const up = w.toUpperCase(); return ROMAN.has(up) ? up : w.charAt(0).toUpperCase() + w.slice(1);
+    }) : null;
     const rawChanged = displayDesc && displayDesc.toLowerCase() !== info.desc.toLowerCase();
 
     const numDisplay  = isNumMatch ? hl(key, escQl) : key;
@@ -1976,8 +1984,8 @@ function renderCatalogResults(q) {
 
     const subTag = info.sub
       ? (isSubMatch
-          ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--blue);background:var(--blued);border-radius:4px;padding:1px 6px;margin-left:6px">sub #${hl(info.sub, escQl)}</span>`
-          : `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:6px">→ ${info.sub}</span>`)
+          ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--blue);background:var(--blued);border-radius:4px;padding:1px 6px;margin-left:6px">prev #${hl(info.sub, escQl)}</span>`
+          : `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:6px">prev #${info.sub}</span>`)
       : '';
 
     const priceTag = (info.retail != null)

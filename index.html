@@ -611,7 +611,7 @@ body::after {
     <!-- Title + version -->
     <div style="opacity:0;animation:suFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards 0.2s;margin-bottom:32px">
       <div class="brand-line" style="font-size:16px;letter-spacing:5px;margin-bottom:10px">Project: Herald</div>
-      <div id="appVersionBadge" style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--muted);letter-spacing:2px">v3.0.1</div>
+      <div id="appVersionBadge" style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--muted);letter-spacing:2px">v3.0.3</div>
     </div>
 
     <!-- Heading -->
@@ -1151,6 +1151,7 @@ function infoBtnHtml(itemNum, extraStyle) {
 }
 
 let operator = '', store = '', items = [], curField = 'item', curValue = '', curRow = {item:'',order:'',qoh:''};
+let _cursorPos = 0; // tracks cursor position in eInput independently of DOM (Android-safe)
 let pastOrder = null, nextId = 1;
 
 // Inline edit state (entry screen)
@@ -1216,27 +1217,26 @@ function selectStore(name) {
 function kp(d) {
   if (capsOn && kbdMode === "abc" && d.length === 1 && d.match(/[a-zA-Z]/)) d = d.toUpperCase();
   const inp = document.getElementById('eInput');
-  const start = inp.selectionStart != null ? inp.selectionStart : curValue.length;
-  const end   = inp.selectionEnd   != null ? inp.selectionEnd   : curValue.length;
+  // Use JS-tracked cursor pos — Android resets selectionStart to 0 on programmatic value sets
+  const start = _cursorPos;
+  const end   = _cursorPos; // no selection range from numpad
   curValue = curValue.slice(0, start) + d + curValue.slice(end);
+  _cursorPos = start + d.length;
   inp.value = curValue;
-  const newPos = start + d.length;
-  inp.setSelectionRange(newPos, newPos);
-  // Pulse
-  inp.classList.remove('val-tick'); void inp.offsetWidth; inp.classList.add('val-tick');
+  inp.setSelectionRange(_cursorPos, _cursorPos);
+
 }
 function kpDel() {
   const inp = document.getElementById('eInput');
-  const start = inp.selectionStart != null ? inp.selectionStart : curValue.length;
-  const end   = inp.selectionEnd   != null ? inp.selectionEnd   : curValue.length;
+  const start = _cursorPos;
   let newPos;
-  if (start !== end) {
-    curValue = curValue.slice(0, start) + curValue.slice(end); newPos = start;
-  } else if (start > 0) {
-    curValue = curValue.slice(0, start - 1) + curValue.slice(start); newPos = start - 1;
+  if (start > 0) {
+    curValue = curValue.slice(0, start - 1) + curValue.slice(start);
+    newPos = start - 1;
   } else { return; }
+  _cursorPos = newPos;
   inp.value = curValue;
-  inp.setSelectionRange(newPos, newPos);
+  inp.setSelectionRange(_cursorPos, _cursorPos);
 }
 function kpBack() {
   if (editIdx >= 0) return;
@@ -1317,7 +1317,8 @@ function startEdit(idx, field) {
   // Set input value and position cursor at end
   const _inp = document.getElementById('eInput');
   _inp.value = curValue;
-  requestAnimationFrame(() => { _inp.focus(); _inp.setSelectionRange(curValue.length, curValue.length); });
+  _cursorPos = curValue.length;
+  requestAnimationFrame(() => { _inp.focus(); _inp.setSelectionRange(_cursorPos, _cursorPos); });
   refreshEditDisp(); renderEntryItems();
 }
 function saveInlineEdit() {
@@ -1342,7 +1343,7 @@ function refreshEditDisp() {
   inp.className   = 'edit-mode' + (editField==='qoh' ? ' qoh-mode' : '');
   inp.placeholder = 'enter value';
   // value set by startEdit/kp directly — only sync if out of sync
-  if (inp.value !== curValue) inp.value = curValue;
+  if (inp.value !== curValue) { inp.value = curValue; _cursorPos = curValue.length; }
   const nb = document.getElementById('nextBtn');
   nb.textContent='Save'; nb.className='k kblue';
   document.getElementById('eCtx').innerHTML='';
@@ -1363,6 +1364,7 @@ function refreshDisp() {
   inp.className   = curField==='qoh' ? 'qoh-mode' : '';
   inp.placeholder = PROMPTS[curField];
   inp.value       = curValue;
+  _cursorPos = curValue.length; // sync cursor to end on field change
   const ctx = document.getElementById('eCtx');
   if (curField==='item') { ctx.innerHTML=''; }
   else {
@@ -2132,7 +2134,7 @@ function setOverlayCasesMode(val) {
 refreshDisp(); refreshNext(); refreshReview();
 
 // ── STARTUP SEQUENCE ──
-const APP_VERSION = 'v3.0.1';
+const APP_VERSION = 'v3.0.3';
 const VERSION_URL = 'https://project-herald.vercel.app/version.json';
 
 function suIcon(id, cls, content) {
@@ -2218,6 +2220,29 @@ async function runStartup() {
 }
 
 runStartup();
+
+// Sync _cursorPos from native cursor when user taps inside the input (tap-to-reposition)
+(function() {
+  const inp = document.getElementById('eInput');
+  if (!inp) return;
+  function syncCursorFromDOM() {
+    // Small delay so browser has committed the tap position
+    setTimeout(() => {
+      if (inp.selectionStart != null) _cursorPos = inp.selectionStart;
+    }, 30);
+  }
+  inp.addEventListener('click',     syncCursorFromDOM);
+  inp.addEventListener('touchend',  syncCursorFromDOM);
+  inp.addEventListener('keydown', e => {
+    // Block any real keyboard input — numpad only
+    if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key)) {
+      e.preventDefault();
+    } else {
+      // Arrow keys move native cursor — sync after
+      setTimeout(() => { if (inp.selectionStart != null) _cursorPos = inp.selectionStart; }, 10);
+    }
+  });
+})();
 
 // ── KEYBOARD TOGGLE ──
 let kbdMode = 'num'; // 'num' | 'abc'

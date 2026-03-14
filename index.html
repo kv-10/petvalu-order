@@ -611,7 +611,7 @@ body::after {
     <!-- Title + version -->
     <div style="opacity:0;animation:suFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards 0.2s;margin-bottom:32px">
       <div class="brand-line" style="font-size:16px;letter-spacing:5px;margin-bottom:10px">Project: Herald</div>
-      <div id="appVersionBadge" style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--muted);letter-spacing:2px">v3.0.3</div>
+      <div id="appVersionBadge" style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--muted);letter-spacing:2px">v3.0.4</div>
     </div>
 
     <!-- Heading -->
@@ -2134,7 +2134,7 @@ function setOverlayCasesMode(val) {
 refreshDisp(); refreshNext(); refreshReview();
 
 // ── STARTUP SEQUENCE ──
-const APP_VERSION = 'v3.0.3';
+const APP_VERSION = 'v3.0.4';
 const VERSION_URL = 'https://project-herald.vercel.app/version.json';
 
 function suIcon(id, cls, content) {
@@ -2225,20 +2225,51 @@ runStartup();
 (function() {
   const inp = document.getElementById('eInput');
   if (!inp) return;
-  function syncCursorFromDOM() {
-    // Small delay so browser has committed the tap position
+
+  // On touchend, use caretRangeFromPoint/caretPositionFromPoint to get the exact
+  // character index under the finger — works on iOS where selectionStart is unreliable
+  // with inputmode="none". Falls back to selectionStart for Android.
+  inp.addEventListener('touchend', function(e) {
+    const touch = e.changedTouches[0];
+    let pos = null;
+
+    // iOS / Safari: document.caretRangeFromPoint
+    if (document.caretRangeFromPoint) {
+      const range = document.caretRangeFromPoint(touch.clientX, touch.clientY);
+      if (range && range.startContainer === inp.firstChild) {
+        pos = range.startOffset;
+      } else if (range && range.startContainer === inp) {
+        pos = range.startOffset;
+      }
+    }
+    // Firefox / others: document.caretPositionFromPoint
+    if (pos === null && document.caretPositionFromPoint) {
+      const caret = document.caretPositionFromPoint(touch.clientX, touch.clientY);
+      if (caret) pos = caret.offset;
+    }
+    // Android fallback: selectionStart after short delay
+    if (pos !== null) {
+      _cursorPos = Math.max(0, Math.min(pos, curValue.length));
+      inp.setSelectionRange(_cursorPos, _cursorPos);
+    } else {
+      setTimeout(() => {
+        if (inp.selectionStart != null) _cursorPos = Math.min(inp.selectionStart, curValue.length);
+      }, 30);
+    }
+  });
+
+  // Desktop click (for testing)
+  inp.addEventListener('click', function() {
     setTimeout(() => {
-      if (inp.selectionStart != null) _cursorPos = inp.selectionStart;
-    }, 30);
-  }
-  inp.addEventListener('click',     syncCursorFromDOM);
-  inp.addEventListener('touchend',  syncCursorFromDOM);
+      if (inp.selectionStart != null) _cursorPos = Math.min(inp.selectionStart, curValue.length);
+    }, 10);
+  });
+
   inp.addEventListener('keydown', e => {
     // Block any real keyboard input — numpad only
     if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key)) {
       e.preventDefault();
     } else {
-      // Arrow keys move native cursor — sync after
       setTimeout(() => { if (inp.selectionStart != null) _cursorPos = inp.selectionStart; }, 10);
     }
   });
@@ -2478,7 +2509,7 @@ function _showNextSanity() {
     title.textContent  = 'Not in catalog';
     msg.innerHTML      = `<b>${item.itemNum}</b> wasn't found in the product catalog. It might be a new item, or a possible typo.`;
     btns.innerHTML     = `<button class="sanity-btn-danger" onclick="sanityAction(1)">Remove item</button>
-                          <button class="sanity-btn-pri" style="background:var(--accent);color:#060910" onclick="sanityAction(2)">Keep it</button>`;
+                          <button class="sanity-btn-pri" style="background:var(--accent);color:#ffffff" onclick="sanityAction(2)">Keep it</button>`;
   } else if (w.type === 'order_high') {
     emoji.textContent = '⚠️';
     title.textContent = 'Large order quantity';
@@ -2489,7 +2520,7 @@ function _showNextSanity() {
       msg.innerHTML = `Order qty of <b>${w.effectiveOrder}</b>${casesNote} is more than 2× the order multiple of <b>${w.om}</b>. Just making sure this is right.`;
     }
     btns.innerHTML = `<button class="sanity-btn-sec" onclick="sanityAction(1)">Edit qty</button>
-                      <button class="sanity-btn-pri" style="background:var(--accent);color:#060910" onclick="sanityAction(2)">Looks right ✓</button>`;
+                      <button class="sanity-btn-pri" style="background:var(--accent);color:#ffffff" onclick="sanityAction(2)">Looks right ✓</button>`;
   } else if (w.type === 'qoh_high') {
     emoji.textContent = '⚠️';
     title.textContent = 'High on-hand count';
@@ -2499,7 +2530,7 @@ function _showNextSanity() {
       msg.innerHTML = `On-hand count of <b>${w.qoh}</b> is more than 2× the order multiple of <b>${w.om}</b>. Did you mean to enter a different number?`;
     }
     btns.innerHTML = `<button class="sanity-btn-sec" onclick="sanityAction(1)">Edit on hand</button>
-                      <button class="sanity-btn-pri" style="background:var(--accent);color:#060910" onclick="sanityAction(2)">Looks right ✓</button>`;
+                      <button class="sanity-btn-pri" style="background:var(--accent);color:#ffffff" onclick="sanityAction(2)">Looks right ✓</button>`;
   }
 
   // Slide up
